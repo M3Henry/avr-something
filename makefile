@@ -1,6 +1,6 @@
 CC = avr-gcc
 CFLAGS = -Os -DF_CPU=12000000 -flto
-CPPFLAGS = -std=c++17
+CPPFLAGS = -std=c++14
 TARGET_ARCH = -mmcu=atmega644p
 
 DEPFLAGS = -MT $@ -MMD -MP -MF .$*.d
