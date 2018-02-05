@@ -8,59 +8,55 @@ constexpr uint8_t bit(const uint8_t shift)
 	return uint8_t(1) << shift;
 }
 
-namespace lcd
-{
-	auto& control()
-	{
-		return io::pin::A();
-	}
-	auto& data()
-	{
-		return io::pin::C();
-	}
-	
-	namespace signal
-	{
-		constexpr auto select_n = bit(0);
-		constexpr auto backlight = bit(1);
-		constexpr auto reset_n = bit(2);
-		constexpr auto write_n = bit(3);
-		constexpr auto command_n = bit(4);
-		constexpr auto read_n = bit(5);
-		constexpr auto vSync = bit(6);
-		constexpr auto hSync = bit(7);
-	}
-	
-	void init()
-	{
-		control() = 0b11111001;
-		io::direction::A() = 0xFF;
-		io::direction::C() = 0xFF;
-		
-//	FMARK	VSYNC	!READ		DATA/!CTRL	!WRITE	!RESET	BACKLI	!CHIPSELECT
-		
-		_delay_ms(16);
-		control() = 0xFF;
-	}
-	void writeCommand(const uint8_t cmd)
-	{
-		// control sequence probably wrong!
-		
-		using namespace signal;
-		control() = ~command_n;
-		data() = cmd;
-		control() = ~(command_n | write_n);
-		control() = 0xFF;
-	}
-}
+/*
+	B0
+	B1	SD ???
+	B2	!USB!
+	B3	!USB!
+	B4	SD _SS_
+	B5	SD MOSI
+	B6	SD MISO
+	B7	SD SCLK | LED red
+
+	C2	U-B | B
+	C3	D-B | C-B
+	C4	R-B | A
+	C5	L-B
+
+	D0	WHEEL COM B
+	D1	WHEEL COM A
+	D2	RS232 RX1
+	D3	RS232 TX1
+	D4	LED yellow
+	D5	L OC1A | ADC5
+	D6	LED green
+	D7	R OC2A | ADC7
+*/
 
 int main(void) 
 {
-	auto& mcuCtrl = memory(0x55);
-	mcuCtrl |= 0x80;
-	mcuCtrl |= 0x80;
+	io::direction::B() = bit(7);
+	io::direction::D() = bit(4) | bit(6);
 	
-	lcd::init();
 	
-	for(;;);
+	io::direction::D() = bit(5) | bit(7);
+	
+	
+/*	for(;;)
+	{
+		io::pin::D() = bit(5);
+		_delay_ms(1);
+		io::pin::D() = bit(5) | bit(7);
+		_delay_ms(1);
+	}
+*/	
+	for(;;)
+	{
+		io::out::B() = bit(7);
+		io::out::D() = bit(4);
+		_delay_ms(300);
+		io::out::B() = 0;
+		io::out::D() = bit(6);
+		_delay_ms(600);
+	}
 }
