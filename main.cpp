@@ -27,7 +27,7 @@
 
 	C2	U-B~ | W-A
 	C3	D-B~ | W-B
-	C4	R-B~ | C-B~
+	C4	R-B~ | C-B
 	C5	L-B~
 
 	D0	BUTTON COM B
@@ -42,6 +42,7 @@
 constexpr auto wheelCOM = bit(1);
 constexpr auto wheelA = bit(2);
 constexpr auto wheelB = bit(3);
+constexpr auto buttonC = bit(4);
 
 constexpr auto ledRED = bit(7);
 constexpr auto ledYEL = bit(4);
@@ -51,7 +52,9 @@ int main(void)
 {
 	ctrl::disableJTAG();
 	
-	io::out::C() = wheelA | wheelB;
+	io::direction::B() = ledRED;
+	
+	io::out::C() = wheelA | wheelB | buttonC;
 	io::direction::C() = 0;
 	
 	io::out::D() = 0;
@@ -59,10 +62,12 @@ int main(void)
 	
 	for (;;)
 	{
-		auto val = io::pin::C();
-		auto a = (val & wheelA) << 2;
-		auto b = (val & wheelB) << 3;
+		auto val = ~io::pin::C();
+		auto r = (val << 3) & ledRED;
+		auto a = (val << 2) & ledYEL;
+		auto b = (val << 3) & ledGRN;
 		
+		io::out::B() = r;
 		io::out::D() = a | b;
 	}
 
