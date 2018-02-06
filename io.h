@@ -1,11 +1,5 @@
 #pragma once
-#include <inttypes.h>
-
-template <typename T = uint8_t>
-constexpr T volatile& memory(uintptr_t addr)
-{
-	return *reinterpret_cast<T*>(addr);
-}
+#include "utils.h"
 
 namespace io
 {

@@ -1,14 +1,21 @@
-#include "led.h"
 #include "io.h"
+#include "ctrl.h"
+
 #include <util/delay.h>
 
-constexpr uint8_t bit(const uint8_t shift)
-{
-//	static_assert(8 > shift, "must be in range (0, 7)");
-	return uint8_t(1) << shift;
-}
-
 /*
+10		GND
+	9	C5
+8		
+	7	AREF
+6		_RESET_
+	5	C3
+4		AVCC
+	3	C4
+2		GND
+	1	C2
+	
+	
 	B0
 	B1	SD ???
 	B2	!USB!
@@ -18,12 +25,12 @@ constexpr uint8_t bit(const uint8_t shift)
 	B6	SD MISO
 	B7	SD SCLK | LED red
 
-	C2	U-B | B
-	C3	D-B | C-B
-	C4	R-B | A
-	C5	L-B
+	C2	U-B~ | W-A
+	C3	D-B~ | W-B
+	C4	R-B~ | C-B~
+	C5	L-B~
 
-	D0	WHEEL COM B
+	D0	BUTTON COM B
 	D1	WHEEL COM A
 	D2	RS232 RX1
 	D3	RS232 TX1
@@ -32,25 +39,43 @@ constexpr uint8_t bit(const uint8_t shift)
 	D6	LED green
 	D7	R OC2A | ADC7
 */
+constexpr auto wheelCOM = bit(1);
+constexpr auto wheelA = bit(2);
+constexpr auto wheelB = bit(3);
+
+constexpr auto ledRED = bit(7);
+constexpr auto ledYEL = bit(4);
+constexpr auto ledGRN = bit(6);
 
 int main(void) 
 {
-	io::direction::B() = bit(7);
-	io::direction::D() = bit(4) | bit(6);
+	ctrl::disableJTAG();
 	
+	io::out::C() = wheelA | wheelB;
+	io::direction::C() = 0;
 	
-	io::direction::D() = bit(5) | bit(7);
+	io::out::D() = 0;
+	io::direction::D() = wheelCOM | ledYEL | ledGRN;
 	
-	
-/*	for(;;)
+	for (;;)
+	{
+		auto val = io::pin::C();
+		auto a = (val & wheelA) << 2;
+		auto b = (val & wheelB) << 3;
+		
+		io::out::D() = a | b;
+	}
+
+/*
+	for (;;)
 	{
 		io::pin::D() = bit(5);
 		_delay_ms(1);
 		io::pin::D() = bit(5) | bit(7);
 		_delay_ms(1);
 	}
-*/	
-	for(;;)
+
+	for (;;)
 	{
 		io::out::B() = bit(7);
 		io::out::D() = bit(4);
@@ -59,4 +84,5 @@ int main(void)
 		io::out::D() = bit(6);
 		_delay_ms(600);
 	}
+*/
 }
