@@ -25,10 +25,10 @@
 	B6	SD MISO
 	B7	SD SCLK | LED red
 
-	C2	U-B~ | W-A
-	C3	D-B~ | W-B
-	C4	R-B~ | C-B
-	C5	L-B~
+	C2	U-B | W-A
+	C3	D-B | W-B
+	C4	R-B | C-B
+	C5	L-B
 
 	D0	BUTTON COM B
 	D1	WHEEL COM A
@@ -39,6 +39,12 @@
 	D6	LED green
 	D7	R OC2A | ADC7
 */
+constexpr auto buttonCOM = bit(0);
+constexpr auto buttonL = bit(2);
+constexpr auto buttonU = bit(3);
+constexpr auto buttonR = bit(4);
+constexpr auto buttonD = bit(5);
+
 constexpr auto wheelCOM = bit(1);
 constexpr auto wheelA = bit(2);
 constexpr auto wheelB = bit(3);
@@ -54,21 +60,34 @@ int main(void)
 	
 	io::direction::B() = ledRED;
 	
-	io::out::C() = wheelA | wheelB | buttonC;
 	io::direction::C() = 0;
+	io::out::C() = 0xFF;
 	
-	io::out::D() = 0;
-	io::direction::D() = wheelCOM | ledYEL | ledGRN;
+	uint8_t stateD = 0;
+	io::out::D() = buttonCOM;
+	io::direction::D() = buttonCOM | wheelCOM | ledYEL | ledGRN;
 	
 	for (;;)
 	{
 		auto val = ~io::pin::C();
+		io::out::D() = wheelCOM | stateD;
 		auto r = (val << 3) & ledRED;
 		auto a = (val << 2) & ledYEL;
 		auto b = (val << 3) & ledGRN;
 		
 		io::out::B() = r;
-		io::out::D() = a | b;
+		io::out::D() = wheelCOM | (stateD = a | b);
+		
+		auto butts = ~io::pin::C();
+		io::out::D() = buttonCOM | stateD;
+		
+		if (butts & buttonD) butts = 0xFF;
+		auto x = (butts << 3) & ledRED;
+		auto y = (butts << 2) & ledYEL;
+		auto z = (butts << 3) & ledGRN;
+		
+		io::out::B() = x;
+		io::out::D() = buttonCOM | (stateD = y | z);
 	}
 
 /*
@@ -78,16 +97,6 @@ int main(void)
 		_delay_ms(1);
 		io::pin::D() = bit(5) | bit(7);
 		_delay_ms(1);
-	}
-
-	for (;;)
-	{
-		io::out::B() = bit(7);
-		io::out::D() = bit(4);
-		_delay_ms(300);
-		io::out::B() = 0;
-		io::out::D() = bit(6);
-		_delay_ms(600);
 	}
 */
 }
