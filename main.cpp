@@ -1,10 +1,18 @@
 #include "hidModule.h"
+#include "lcd.h"
+#include "ctrl.h"
 
 #include <util/delay.h>
 
+
+
 int main(void) 
 {
-	hid::test();
+	ctrl::disableJTAG();
+	
+	lcd::test();
+	
+	//hid::test();
 /*
 	for (;;)
 	{
