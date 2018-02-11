@@ -4,19 +4,13 @@
 
 #include <util/delay.h>
 
-
-
 int main(void) 
 {
 	ctrl::disableJTAG();
 	
-	hid::init();
+	lcd::init();
 	
-	io::direction::C() = 0xFF;
-	
-	//hid::test();
-	
-	lcd::test();
+	lcd::testFont();
 /*
 	for (;;)
 	{
