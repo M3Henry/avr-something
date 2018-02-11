@@ -41,19 +41,25 @@
 namespace hid {
 
 constexpr auto buttonCOM = bit(0);
-constexpr auto buttonL = bit(2);
-constexpr auto buttonU = bit(3);
-constexpr auto buttonR = bit(4);
-constexpr auto buttonD = bit(5);
-
 constexpr auto wheelCOM = bit(1);
-constexpr auto wheelA = bit(2);
-constexpr auto wheelB = bit(3);
-constexpr auto buttonC = bit(4);
+
+constexpr auto wheelA = bit(0);
+constexpr auto wheelB = bit(1);
+constexpr auto buttonC = bit(2);
+constexpr auto buttonL = bit(3);
+constexpr auto buttonU = bit(4);
+constexpr auto buttonR = bit(5);
+constexpr auto buttonD = bit(6);
 
 constexpr auto ledRED = bit(7);
 constexpr auto ledYEL = bit(4);
 constexpr auto ledGRN = bit(6);
+
+void init();
+
+uint8_t sampleInput();
+
+void setLeds(const uint8_t);
 
 [[noreturn]]
 void test();

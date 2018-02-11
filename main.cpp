@@ -10,9 +10,13 @@ int main(void)
 {
 	ctrl::disableJTAG();
 	
-	lcd::test();
+	hid::init();
 	
-	//hid::test();
+	io::direction::C() = 0xFF;
+	
+	hid::test();
+	
+	//lcd::test();
 /*
 	for (;;)
 	{

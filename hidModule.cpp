@@ -1,39 +1,62 @@
 #include "hidModule.h"
 #include "ctrl.h"
+#include <util/delay.h>
+
+void hid::init()
+{
+	io::direction::B() = ledRED;
+	
+	io::out::D() = wheelCOM | buttonCOM;
+	io::direction::D() = wheelCOM | buttonCOM | ledYEL | ledGRN;
+}
+
+uint8_t hid::sampleInput()
+{
+	constexpr uint8_t maskC = 0b00111100;
+	constexpr uint8_t maskD = wheelCOM | buttonCOM;
+	
+	const auto saveCdir = io::direction::C();
+	io::direction::C() = saveCdir & ~maskC;
+	
+	const auto saveCout = io::out::C();
+	io::out::C() = saveCout | maskC;
+	io::out::D() = mix(io::out::D(), maskD, wheelCOM);
+
+	_delay_us(1);
+	auto buttons = (maskC & ~io::pin::C()) << 1;
+	io::pin::D() = maskD;
+	
+	_delay_us(1);
+	buttons |= (maskC & ~io::pin::C()) >> 2;
+	
+	io::out::C() = saveCout;
+	io::direction::C() = saveCdir;
+	
+	return buttons;
+}
+
+void hid::setLeds(const uint8_t val)
+{
+	io::out::B() = mix(io::out::B(), ledRED, val);
+	io::out::D() = mix(io::out::D(), ledYEL | ledGRN, val);
+}
 
 void hid::test()
 {
 	ctrl::disableJTAG();
 	
-	io::direction::B() = ledRED;
-	
-	io::direction::C() = 0;
-	io::out::C() = 0xFF;
-	
-	uint8_t stateD = 0;
-	io::out::D() = buttonCOM;
-	io::direction::D() = buttonCOM | wheelCOM | ledYEL | ledGRN;
+	init();
 	
 	for (;;)
 	{
-		auto val = ~io::pin::C();
-		io::out::D() = wheelCOM | stateD;
-		auto r = (val << 3) & ledRED;
-		auto a = (val << 2) & ledYEL;
-		auto b = (val << 3) & ledGRN;
+		auto val = sampleInput();
 		
-		io::out::B() = r;
-		io::out::D() = wheelCOM | (stateD = a | b);
+		const auto r = (val & (buttonL | wheelA)) ? ledRED : 0;
+		const auto y = (val & (buttonD | buttonU)) ? ledYEL : 0;
+		const auto g = (val & (buttonR | wheelB)) ? ledGRN : 0;
 		
-		auto butts = ~io::pin::C();
-		io::out::D() = buttonCOM | stateD;
+		const auto leds = r | y | g;
 		
-		if (butts & buttonD) butts = 0xFF;
-		auto x = (butts << 3) & ledRED;
-		auto y = (butts << 2) & ledYEL;
-		auto z = (butts << 3) & ledGRN;
-		
-		io::out::B() = x;
-		io::out::D() = buttonCOM | (stateD = y | z);
+		setLeds((val & buttonC) ? ~leds : leds);
 	}
 }

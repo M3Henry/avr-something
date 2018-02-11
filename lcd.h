@@ -1,6 +1,7 @@
 #pragma once
 
 #include "io.h"
+#include "hidModule.h"
 
 #include <util/delay.h>
 
@@ -105,8 +106,9 @@ void test()
 	{
 		if (0 == ++p.r) if (0 == ++p.b) --p.g;
 		
-		send(p.word);
+		//send(p.word);
 		//send(uint16_t(0xF800));
+		send(hid::sampleInput());
 	}
 }
 

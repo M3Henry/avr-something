@@ -18,3 +18,8 @@ inline constexpr uint16_t wbit(const uint8_t shift)
 //	static_assert(8 > shift, "must be in range (0, 7)");
 	return uint8_t(1) << shift;
 }
+
+inline constexpr uint8_t mix(const uint8_t a, const uint8_t mask, const uint8_t b)
+{
+	return (a & ~mask) | (b & mask);
+}
