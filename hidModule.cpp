@@ -12,7 +12,7 @@ void hid::init()
 
 uint8_t hid::sampleInput()
 {
-	constexpr uint8_t maskC = 0b00111100;
+	constexpr uint8_t maskC = bits(2,3,4,5);
 	constexpr uint8_t maskD = wheelCOM | buttonCOM;
 	
 	const auto saveCdir = io::direction::C();

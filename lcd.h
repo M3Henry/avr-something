@@ -104,11 +104,13 @@ void test()
 	
 	for (;;)
 	{
-		if (0 == ++p.r) if (0 == ++p.b) --p.g;
+		//if (0 == ++p.r) if (0 == ++p.b) --p.g;
 		
 		//send(p.word);
 		//send(uint16_t(0xF800));
-		send(hid::sampleInput());
+		auto x = hid::sampleInput();
+		send(x);
+		send(x);
 	}
 }
 

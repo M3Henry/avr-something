@@ -14,9 +14,9 @@ int main(void)
 	
 	io::direction::C() = 0xFF;
 	
-	hid::test();
+	//hid::test();
 	
-	//lcd::test();
+	lcd::test();
 /*
 	for (;;)
 	{
