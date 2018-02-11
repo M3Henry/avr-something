@@ -20,7 +20,7 @@ uint8_t hid::sampleInput()
 	
 	const auto saveCout = io::out::C();
 	io::out::C() = saveCout | maskC;
-	io::out::D() = mix(io::out::D(), maskD, wheelCOM);
+	io::out::D() = mix(io::out::D(), wheelCOM, maskD);
 
 	_delay_us(1);
 	auto buttons = (maskC & ~io::pin::C()) << 1;
@@ -37,8 +37,8 @@ uint8_t hid::sampleInput()
 
 void hid::setLeds(const uint8_t val)
 {
-	io::out::B() = mix(io::out::B(), ledRED, val);
-	io::out::D() = mix(io::out::D(), ledYEL | ledGRN, val);
+	io::out::B() = mix(io::out::B(), val, ledRED);
+	io::out::D() = mix(io::out::D(), val, ledYEL | ledGRN);
 }
 
 void hid::test()

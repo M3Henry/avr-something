@@ -31,7 +31,7 @@ inline constexpr uint16_t wbit(const uint8_t shift)
 	return uint8_t(1) << shift;
 }
 
-inline constexpr uint8_t mix(const uint8_t a, const uint8_t mask, const uint8_t b)
+inline constexpr uint8_t mix(const uint8_t a, const uint8_t b, const uint8_t mask)
 {
 	return (a & ~mask) | (b & mask);
 }
