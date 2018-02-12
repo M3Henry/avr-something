@@ -40,7 +40,7 @@ void cmd(const uint8_t c, Ts... params)
 	
 	// https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion#25683817
 	// TODO:(C++17)      (send(params), ...);
-	char dummy[] __attribute__((unused)) {0, (send(uint8_t(params)), '\0')...};
+	char dummy[] {0, (send(uint8_t(params)), '\0')...};
 }
 
 void fillScreen(uint16_t colour)
@@ -74,6 +74,8 @@ void init()
 	cmd(0x3A, 0x55); // 16 bits per pixel
 	
 	fillScreen(0);
+	
+	cmd(0x36, 0x20); // x/y -> y/x
 	
 	cmd(0x29); // display ON
 }
@@ -111,25 +113,73 @@ void test()
 	}
 }
 
-void testFont()
+void setColumns(const uint16_t start, const uint16_t end)
 {
 	cmd(0x2A);
-	send(uint16_t(0));
-	send(uint16_t(7));
-	
-	cmd(0x2C);
-	
-	for (auto const r : mash::X)
+	send(start);
+	send(end);
+}
+
+void setRows(const uint16_t start, const uint16_t end)
+{
+	cmd(0x2B);
+	send(start);
+	send(end);
+}
+
+struct drawSequence
+{
+	drawSequence()
 	{
-		send(r & bit(0) ? uint16_t(0xF800) : uint16_t(0x001F));
-		send(r & bit(1) ? uint16_t(0xF800) : uint16_t(0x001F));
-		send(r & bit(2) ? uint16_t(0xF800) : uint16_t(0x001F));
-		send(r & bit(3) ? uint16_t(0xF800) : uint16_t(0x001F));
-		send(r & bit(4) ? uint16_t(0xF800) : uint16_t(0x001F));
-		send(r & bit(5) ? uint16_t(0xF800) : uint16_t(0x001F));
-		send(r & bit(6) ? uint16_t(0xF800) : uint16_t(0x001F));
-		send(r & bit(7) ? uint16_t(0xF800) : uint16_t(0x001F));
+		cmd(0x2C);
 	}
+	~drawSequence()
+	{
+		cmd(0);
+	}
+};
+
+struct
+{
+	void putc(const char c)
+	{
+		setColumns(y, y + 7);
+		y += 8;
+		setRows(0, 7);
+		
+		auto g = drawSequence();
+		
+		uint8_t const* bytePtr = fonts::mash[c - ' '];
+		
+		uint8_t x = 8;
+		do
+		{
+			auto byte = pgm_read_byte(bytePtr++);
+			send(byte & bit(7) ? foreground : background);
+			send(byte & bit(6) ? foreground : background);
+			send(byte & bit(5) ? foreground : background);
+			send(byte & bit(4) ? foreground : background);
+			send(byte & bit(3) ? foreground : background);
+			send(byte & bit(2) ? foreground : background);
+			send(byte & bit(1) ? foreground : background);
+			send(byte & bit(0) ? foreground : background);
+		}
+		while (--x);
+	}
+	void puts(char const* str)
+	{
+		while (auto c = *str++) putc(c);
+	}
+
+	uint16_t x = 0, y = 0;
+	uint16_t foreground = white;
+	uint16_t background = dgrey;
+	fonts::glyph const* glyphs = fonts::mash;
+} lout;
+
+void testFont()
+{
+	lout.puts("Hello, World!");
 }
 
 }

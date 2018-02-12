@@ -51,7 +51,12 @@ constexpr uint16_t red   = 0xF800;
 constexpr uint16_t green = 0x07E0;
 constexpr uint16_t blue  = 0x001F;
 
-static_assert(red + green + blue == 0xFFFF, "RGB masks sum incorrectly");
+constexpr uint16_t black = 0;
+constexpr uint16_t dgrey = 0x18E5;
+constexpr uint16_t grey  = 0x39E7;
+constexpr uint16_t white = 0xFFFF;
+
+static_assert(red + green + blue == white, "RGB masks sum incorrectly");
 
 void init();
 
