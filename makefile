@@ -25,7 +25,7 @@ program.elf: $(OBJECTS)
 
 # The install target
 install: program.hex
-	@ avrdude -c usbasp -p m644p -U $<
+	@ avrdude -c usbasp -p m644p -D -U $<
 
 # Clean up everything that we generate
 clean:

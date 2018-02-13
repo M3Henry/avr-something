@@ -161,13 +161,12 @@ struct
 		
 		auto g = drawSequence();
 		
-		uint8_t const* bytePtr = fonts::mash[c - ' '];
+		auto bytePtr = flashPtr(fonts::mash[c - ' ']);
 		
 		uint8_t x = 8;
 		do
 		{
-			//auto byte = pgm_read_byte(bytePtr++);
-			auto byte = loadPROGMEM(bytePtr);
+			auto byte = bytePtr.load_post_inc();
 			send(byte & bit(7) ? foreground : background);
 			send(byte & bit(6) ? foreground : background);
 			send(byte & bit(5) ? foreground : background);
@@ -182,15 +181,12 @@ struct
 	void newline()
 	{
 		y += 8;
+		x = 0;
 	}
 	void advance(uint8_t count = 1)
 	{
-		if (x >= 320 - 8)
-		{
-			newline();
-			x -= 320;
-		}
-		x += count * 8;
+		if (x >= 320 - 8) newline();
+		else x += count * 8;
 	}
 	void puts(char const* str)
 	{
@@ -205,7 +201,7 @@ struct
 
 void testFont()
 {
-	lout.puts("Hello, World! It is a very nice day today, what are you up to today?");
+	lout.puts("Hello, World!\nIt is a very nice day today, what are you up to today?");
 }
 
 }

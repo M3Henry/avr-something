@@ -36,17 +36,38 @@ inline constexpr uint8_t mix(const uint8_t a, const uint8_t b, const uint8_t mas
 	return (a & ~mask) | (b & mask);
 }
 
-
-
-inline uint8_t loadPROGMEM(uint8_t const* &addr)
+struct flashPtr
 {
-	uint8_t result;
-	asm volatile
-	(
-		"lpm %0, Z+"
-		
-		: "=r" (result), "=z" (addr)
-		: "1" (addr)
-	);
-	return result;            
-}
+	inline flashPtr(uint8_t const* const p) : ptr(p) {}
+	inline uint8_t load() const
+	{
+		uint8_t result;
+		asm volatile
+		(
+			"lpm %0, Z"
+
+			: "=r" (result)
+			: "z" (ptr)
+		);
+		return result;
+	}
+	inline uint8_t load_post_inc()
+	{
+		uint8_t result;
+		asm volatile
+		(
+			"lpm %0, Z+"
+
+			: "=r" (result), "=z" (ptr)
+			: "1" (ptr)
+		);
+		return result;
+	}
+
+	static_assert(sizeof(uint16_t) == sizeof(uint8_t const *), "Flash ptr should be a word");
+
+private:
+	uint8_t const* ptr;
+};
+
+
