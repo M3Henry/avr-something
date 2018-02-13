@@ -6,7 +6,7 @@ namespace fonts
 {
 using glyph = uint8_t[8];
 
-using font = glyph[] ;
+using font = glyph[];
 
 font const mash [[gnu::__progmem__]] =
 {
