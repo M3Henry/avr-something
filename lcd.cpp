@@ -40,7 +40,7 @@ void cmd(const uint8_t c, Ts... params)
 	
 	// https://stackoverflow.com/questions/25680461/variadic-template-pack-expansion#25683817
 	// TODO:(C++17)      (send(params), ...);
-	char dummy[] {0, (send(uint8_t(params)), '\0')...};
+	char dummy[] __attribute__((unused)) {0, (send(uint8_t(params)), '\0')...};
 }
 
 void fillScreen(uint16_t colour)
@@ -143,9 +143,21 @@ struct
 {
 	void putc(const char c)
 	{
-		setColumns(y, y + 7);
-		y += 8;
-		setRows(0, 7);
+		switch (c)
+		{
+			case '\n':
+				newline();
+				return;
+			case 0x7F:
+				x -= 8;
+				putc(' ');
+				x -= 8;
+				return;
+		}
+		
+		setColumns(x, x + 7);
+		setRows(y, y + 7);
+		advance();
 		
 		auto g = drawSequence();
 		
@@ -154,7 +166,8 @@ struct
 		uint8_t x = 8;
 		do
 		{
-			auto byte = pgm_read_byte(bytePtr++);
+			//auto byte = pgm_read_byte(bytePtr++);
+			auto byte = loadPROGMEM(bytePtr);
 			send(byte & bit(7) ? foreground : background);
 			send(byte & bit(6) ? foreground : background);
 			send(byte & bit(5) ? foreground : background);
@@ -165,6 +178,19 @@ struct
 			send(byte & bit(0) ? foreground : background);
 		}
 		while (--x);
+	}
+	void newline()
+	{
+		y += 8;
+	}
+	void advance(uint8_t count = 1)
+	{
+		if (x >= 320 - 8)
+		{
+			newline();
+			x -= 320;
+		}
+		x += count * 8;
 	}
 	void puts(char const* str)
 	{
@@ -179,7 +205,7 @@ struct
 
 void testFont()
 {
-	lout.puts("Hello, World!");
+	lout.puts("Hello, World! It is a very nice day today, what are you up to today?");
 }
 
 }

@@ -35,3 +35,18 @@ inline constexpr uint8_t mix(const uint8_t a, const uint8_t b, const uint8_t mas
 {
 	return (a & ~mask) | (b & mask);
 }
+
+
+
+inline uint8_t loadPROGMEM(uint8_t const* &addr)
+{
+	uint8_t result;
+	asm volatile
+	(
+		"lpm %0, Z+"
+		
+		: "=r" (result), "=z" (addr)
+		: "1" (addr)
+	);
+	return result;            
+}
