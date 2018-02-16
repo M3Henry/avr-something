@@ -38,7 +38,7 @@ inline constexpr uint8_t mix(const uint8_t a, const uint8_t b, const uint8_t mas
 
 struct flashPtr
 {
-	inline flashPtr(uint8_t const* const p) : ptr(p) {}
+	inline constexpr flashPtr(uint8_t const* const p) : ptr(p) {}
 	inline uint8_t load() const
 	{
 		uint8_t result;
@@ -62,6 +62,28 @@ struct flashPtr
 			: "1" (ptr)
 		);
 		return result;
+	}
+	inline constexpr flashPtr& operator ++()
+	{
+		++ptr;
+		return *this;
+	}
+	inline constexpr flashPtr& operator --()
+	{
+		--ptr;
+		return *this;
+	}
+	inline constexpr flashPtr operator +(const uint16_t delta) const
+	{
+		return flashPtr(ptr + delta);
+	}
+	inline constexpr flashPtr operator -(const uint16_t delta) const
+	{
+		return flashPtr(ptr - delta);
+	}
+	inline constexpr bool operator !=(const flashPtr& that) const
+	{
+		return ptr != that.ptr;
 	}
 
 	static_assert(sizeof(uint16_t) == sizeof(uint8_t const *), "Flash ptr should be a word");

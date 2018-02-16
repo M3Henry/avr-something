@@ -53,7 +53,7 @@ constexpr auto buttonD = bit(6);
 
 constexpr auto ledRED = bit(7);
 constexpr auto ledYEL = bit(4);
-constexpr auto ledGRN = bit(6);
+constexpr auto ledGRN = bit(5);
 
 void init();
 
