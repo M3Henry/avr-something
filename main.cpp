@@ -1,63 +1,14 @@
 #include "hidModule.h"
 #include "lcd.h"
+#include "timer.h"
 #include "ctrl.h"
 
 #include <avr/interrupt.h>
 #include <util/delay.h>
 
-namespace timer
-{
-namespace one
-{
-auto& control()
-{
-	return memory<uint16_t>(0x80);
-}
-auto& inputCapture()
-{
-	return memory<uint16_t>(0x86);
-}
-auto& outputCompareA()
-{
-	return memory<uint16_t>(0x88);
-}
-auto& outputCompareB()
-{
-	return memory<uint16_t>(0x8A);
-}
-}
 
-namespace two
-{
-auto& control()
-{
-	return memory<uint16_t>(0xB0);
-}
-auto& value()
-{
-	return memory(0xB2);
-}
-auto& outputCompareA()
-{
-	return memory(0xB3);
-}
-auto& outputCompareB()
-{
-	return memory(0xB4);
-}
-auto& interruptMask()
-{
-	return memory(0x70);
-}
-auto const& interruptFlags()
-{
-	return memory(0x37);
-}
-}
 
-}
-
-uint8_t const sinTable[] [[gnu::progmem]] =
+int8_t const sinTable[] [[gnu::progmem]] =
 {
 	0,	3,	6,	9,	12,	16,	19,	22,
 	25,	28,	31,	34,	37,	40,	43,	46,
@@ -79,11 +30,6 @@ int main(void)
 	
 	io::direction::D() |= bits(5, 6, 7);
 	
-	/*timer::one::outputCompareA() = 0x0080;
-	timer::one::outputCompareB() = 0x8000;
-	timer::one::inputCapture() = 0x0100;
-	timer::one::control() = 0b00'0'10'001'1111'00'00;*/
-	
 	timer::two::outputCompareA() = 0x80;
 	timer::two::outputCompareB() = 0x80;
 	timer::two::control() = 0b00'00'0'001'1111'00'11;
@@ -91,9 +37,9 @@ int main(void)
 	for (;;)
 	{
 		constexpr uint8_t midPoint = 127;
-		constexpr auto begin = flashPtr(sinTable);
+		constexpr auto begin = flashPtr<int8_t>(sinTable);
 		constexpr auto end = begin + 64;
-		auto ptr = flashPtr(sinTable);
+		auto ptr = flashPtr<int8_t>(sinTable);
 		do
 		{
 			auto val = midPoint + ptr.load_post_inc();

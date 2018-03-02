@@ -36,12 +36,22 @@ inline constexpr uint8_t mix(const uint8_t a, const uint8_t b, const uint8_t mas
 	return (a & ~mask) | (b & mask);
 }
 
+template <typename T>
 struct flashPtr
 {
-	inline constexpr flashPtr(uint8_t const* const p) : ptr(p) {}
-	inline uint8_t load() const
+	static_assert(sizeof(T) == 1, "flashPtr operates on single bytes");
+	
+	constexpr flashPtr(T const* const p)
+	:	ptr(p)
+	{}
+	template <uint16_t S>
+	constexpr flashPtr(const T(& a)[S])
+	:	ptr(static_cast<T const*>(a))
+	{}
+	
+	T load() const
 	{
-		uint8_t result;
+		T result;
 		asm volatile
 		(
 			"lpm %0, Z"
@@ -51,9 +61,9 @@ struct flashPtr
 		);
 		return result;
 	}
-	inline uint8_t load_post_inc()
+	T load_post_inc()
 	{
-		uint8_t result;
+		T result;
 		asm volatile
 		(
 			"lpm %0, Z+"
@@ -63,33 +73,33 @@ struct flashPtr
 		);
 		return result;
 	}
-	inline constexpr flashPtr& operator ++()
+	constexpr flashPtr& operator ++()
 	{
 		++ptr;
 		return *this;
 	}
-	inline constexpr flashPtr& operator --()
+	constexpr flashPtr& operator --()
 	{
 		--ptr;
 		return *this;
 	}
-	inline constexpr flashPtr operator +(const uint16_t delta) const
+	constexpr flashPtr operator +(const uint16_t delta) const
 	{
 		return flashPtr(ptr + delta);
 	}
-	inline constexpr flashPtr operator -(const uint16_t delta) const
+	constexpr flashPtr operator -(const uint16_t delta) const
 	{
 		return flashPtr(ptr - delta);
 	}
-	inline constexpr bool operator !=(const flashPtr& that) const
+	constexpr bool operator !=(const flashPtr& that) const
 	{
 		return ptr != that.ptr;
 	}
 
-	static_assert(sizeof(uint16_t) == sizeof(uint8_t const *), "Flash ptr should be a word");
+	static_assert(sizeof(uint16_t) == sizeof(T const *), "Flash ptr should be a word");
 
 private:
-	uint8_t const* ptr;
+	T const* ptr;
 };
 
 

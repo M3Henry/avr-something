@@ -92,7 +92,19 @@ void test()
 		};
 		uint16_t word;
 		
-		pixel() : word(0) {}
+		constexpr pixel(uint16_t const val = 0)
+		:	word(val)
+		{}
+		
+		constexpr pixel(uint8_t const red, uint8_t const green, uint8_t const blue)
+		:	r(red)
+		,	g(green)
+		,	b(blue)
+		{}
+		static constexpr auto grey(uint8_t val)
+		{
+			return pixel(val >> 1, val, val >> 1);
+		}
 	} p;
 	
 	static_assert(sizeof(pixel) == sizeof(uint16_t), "not correct size");
@@ -161,7 +173,7 @@ struct
 		
 		auto g = drawSequence();
 		
-		auto bytePtr = flashPtr(fonts::mash[c - ' ']);
+		auto bytePtr = flashPtr<uint8_t>(fonts::mash[c - ' ']);
 		
 		uint8_t x = 8;
 		do
@@ -188,9 +200,13 @@ struct
 		if (x >= 320 - 8) newline();
 		else x += count * 8;
 	}
-	void puts(char const* str)
+	void puts_ram(char const* str)
 	{
 		while (auto c = *str++) putc(c);
+	}
+	void puts(flashPtr<char> str)
+	{
+		while (auto c = str.load_post_inc()) putc(c);
 	}
 
 	uint16_t x = 0, y = 0;
@@ -199,9 +215,11 @@ struct
 	fonts::glyph const* glyphs = fonts::mash;
 } lout;
 
+char const testStr[] [[gnu::__progmem__]] = "Hello, World!\nIt is a very nice day today, what are you up to this afternoon?";
+
 void testFont()
 {
-	lout.puts("Hello, World!\nIt is a very nice day today, what are you up to today?");
+	lout.puts(testStr);
 }
 
 }
