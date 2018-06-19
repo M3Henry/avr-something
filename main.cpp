@@ -23,19 +23,33 @@ int8_t const sinTable[] [[gnu::progmem]] =
 int main(void) 
 {
 	ctrl::disableJTAG();
-	
+	hid::init();
 	lcd::init();
-	
+
 	lcd::testFont();
-	
+
 	io::direction::D() |= bits(5, 6, 7);
-	
+
 	timer::two::outputCompareA() = 0x80;
 	timer::two::outputCompareB() = 0x80;
 	timer::two::control() = 0b00'00'0'001'1111'00'11;
 
 	for (;;)
 	{
+	//	LEDs
+
+		auto val = hid::sampleInput();
+
+		const auto r = (val & (hid::buttonL | hid::wheelA)) ? hid::ledRED : 0;
+		const auto y = (val & (hid::buttonD | hid::buttonU)) ? hid::ledYEL : 0;
+		const auto g = (val & (hid::buttonR | hid::wheelB)) ? hid::ledGRN : 0;
+
+		const auto leds = r | y | g;
+
+		hid::setLeds((val & hid::buttonC) ? ~leds : leds);
+
+	//	Sound
+
 		constexpr uint8_t midPoint = 127;
 		constexpr auto begin = flashPtr<int8_t>(sinTable);
 		constexpr auto end = begin + 64;

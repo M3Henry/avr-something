@@ -80,34 +80,40 @@ void init()
 	cmd(0x29); // display ON
 }
 
+union colour
+{
+	struct __attribute__((packed)) {
+		uint8_t r:5;
+		uint8_t g:6;
+		uint8_t b:5;
+	};
+	uint16_t word;
+	
+	constexpr colour(uint16_t const val = 0)
+	:	word(val)
+	{}
+	
+	constexpr colour(uint8_t const red, uint8_t const green, uint8_t const blue)
+	:	r(red)
+	,	g(green)
+	,	b(blue)
+	{}
+	constexpr operator uint16_t() const
+	{
+		return word;
+	}
+	static constexpr auto grey(uint8_t val)
+	{
+		return colour(val >> 1, val, val >> 1);
+	}
+} p;
+
+static_assert(sizeof(colour) == sizeof(uint16_t), "not correct size");
+
 [[noreturn]]
 void test()
 {
-	union pixel
-	{
-		struct __attribute__((packed)) {
-			uint8_t r:5;
-			uint8_t g:6;
-			uint8_t b:5;
-		};
-		uint16_t word;
-		
-		constexpr pixel(uint16_t const val = 0)
-		:	word(val)
-		{}
-		
-		constexpr pixel(uint8_t const red, uint8_t const green, uint8_t const blue)
-		:	r(red)
-		,	g(green)
-		,	b(blue)
-		{}
-		static constexpr auto grey(uint8_t val)
-		{
-			return pixel(val >> 1, val, val >> 1);
-		}
-	} p;
-	
-	static_assert(sizeof(pixel) == sizeof(uint16_t), "not correct size");
+
 	
 	init();
 	
@@ -160,6 +166,12 @@ struct
 			case '\n':
 				newline();
 				return;
+			case '\f':
+				y = 0;
+				// fallthrough
+			case '\r':
+				cr();
+				return;
 			case 0x7F:
 				x -= 8;
 				putc(' ');
@@ -193,6 +205,10 @@ struct
 	void newline()
 	{
 		y += 8;
+		cr();
+	}
+	void cr()
+	{
 		x = 0;
 	}
 	void advance(uint8_t count = 1)
@@ -208,6 +224,28 @@ struct
 	{
 		while (auto c = str.load_post_inc()) putc(c);
 	}
+	void putu(uint16_t val)
+	{
+		if (val >= 10)
+		{
+			putu(val / 10);
+			putc(val % 10 + '0');
+		}
+		else
+		{
+			putc(val + '0');
+		}
+	}
+	void puti(int16_t val)
+	{
+		if (val < 0)
+		{
+			putc('-');
+			putu(-val); // does not handle min(int16_t)
+			return;
+		}
+		putu(val);
+	}
 
 	uint16_t x = 0, y = 0;
 	uint16_t foreground = white;
@@ -215,11 +253,35 @@ struct
 	fonts::glyph const* glyphs = fonts::mash;
 } lout;
 
-char const testStr[] [[gnu::__progmem__]] = "Hello, World!\nIt is a very nice day today, what are you up to this afternoon?";
+char const testStr[] [[gnu::__progmem__]] = "\n\nHello, World!\nIt is a very nice day today, what are you up to this afternoon?\n";
+
+char const clearNum[] [[gnu::__progmem__]] = "\r      \r";
 
 void testFont()
 {
+	lout.foreground = green;
+	for (char c = ' '; c < 0x7F;)
+	{
+		lout.putc(c);
+		if (not (++c % 0x10)) lout.newline();
+	}
+	lout.background = black;
+	lout.foreground = colour(0xF,0x0,0xF);
+	
 	lout.puts(testStr);
+	lout.putu(5);
+	lout.newline();
+	lout.newline();
+	return;
+	lout.foreground = white;
+	int16_t x = -32000;
+	for (;;)
+	{
+		lout.puti(x);
+		x += 10;
+		_delay_ms(50);
+		lout.puts(clearNum);
+	}
 }
 
 }
